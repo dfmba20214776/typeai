@@ -1,0 +1,10 @@
+{
+  "name": "typing-assistant-lab",
+  "private": true,
+  "packageManager": "pnpm@9.12.1",
+  "scripts": {
+    "test": "pnpm -r test",
+    "dev": "pnpm --filter testui-web dev",
+    "e2e": "pnpm --filter testui-web e2e"
+  }
+}

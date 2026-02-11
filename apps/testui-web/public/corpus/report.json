@@ -1,0 +1,261 @@
+{
+  "config": {
+    "inputDir": "C:\\Pubtest\\typing-assistant-lab\\packages\\engine-core\\corpus\\raw",
+    "outDir": "C:\\Pubtest\\typing-assistant-lab\\packages\\engine-core\\corpus\\generated",
+    "minWordFreq": 2,
+    "maxDictWords": 200000,
+    "maxNextPerPrev": 200,
+    "topPairPerPrev": 15
+  },
+  "inputFiles": 3,
+  "rawLineCount": 240009,
+  "normalizedLineCount": 240006,
+  "sentenceCount": 239603,
+  "tokenCount": 1285342,
+  "dictSize": 74841,
+  "ngramSize": 407581,
+  "topWords": [
+    {
+      "word": "나는",
+      "count": 18374
+    },
+    {
+      "word": "수",
+      "count": 10836
+    },
+    {
+      "word": "내가",
+      "count": 9541
+    },
+    {
+      "word": "그",
+      "count": 8085
+    },
+    {
+      "word": "내",
+      "count": 6539
+    },
+    {
+      "word": "있습니다",
+      "count": 5404
+    },
+    {
+      "word": "당신이",
+      "count": 5352
+    },
+    {
+      "word": "안",
+      "count": 5042
+    },
+    {
+      "word": "당신은",
+      "count": 4977
+    },
+    {
+      "word": "난",
+      "count": 4899
+    },
+    {
+      "word": "이",
+      "count": 4299
+    },
+    {
+      "word": "있는",
+      "count": 4217
+    },
+    {
+      "word": "그는",
+      "count": 4142
+    },
+    {
+      "word": "더",
+      "count": 3968
+    },
+    {
+      "word": "잘",
+      "count": 3958
+    },
+    {
+      "word": "것",
+      "count": 3662
+    },
+    {
+      "word": "할",
+      "count": 3644
+    },
+    {
+      "word": "한",
+      "count": 3588
+    },
+    {
+      "word": "있어요",
+      "count": 3541
+    },
+    {
+      "word": "거야",
+      "count": 3404
+    },
+    {
+      "word": "있어",
+      "count": 3242
+    },
+    {
+      "word": "네",
+      "count": 3137
+    },
+    {
+      "word": "좀",
+      "count": 2885
+    },
+    {
+      "word": "당신의",
+      "count": 2867
+    },
+    {
+      "word": "그리고",
+      "count": 2839
+    },
+    {
+      "word": "그녀는",
+      "count": 2704
+    },
+    {
+      "word": "때",
+      "count": 2692
+    },
+    {
+      "word": "해요",
+      "count": 2543
+    },
+    {
+      "word": "게",
+      "count": 2536
+    },
+    {
+      "word": "정말",
+      "count": 2488
+    }
+  ],
+  "topPrev": [
+    {
+      "prev": "0",
+      "nextKinds": 15
+    },
+    {
+      "prev": "00",
+      "nextKinds": 15
+    },
+    {
+      "prev": "000",
+      "nextKinds": 15
+    },
+    {
+      "prev": "000원",
+      "nextKinds": 15
+    },
+    {
+      "prev": "1",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10",
+      "nextKinds": 15
+    },
+    {
+      "prev": "100",
+      "nextKinds": 15
+    },
+    {
+      "prev": "100달러",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10년",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10만",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10분",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10시",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10시에",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10월",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10월에",
+      "nextKinds": 15
+    },
+    {
+      "prev": "10일",
+      "nextKinds": 15
+    },
+    {
+      "prev": "11",
+      "nextKinds": 15
+    },
+    {
+      "prev": "11시",
+      "nextKinds": 15
+    },
+    {
+      "prev": "11시에",
+      "nextKinds": 15
+    },
+    {
+      "prev": "11월",
+      "nextKinds": 15
+    },
+    {
+      "prev": "11월에",
+      "nextKinds": 15
+    },
+    {
+      "prev": "11일",
+      "nextKinds": 15
+    },
+    {
+      "prev": "12",
+      "nextKinds": 15
+    },
+    {
+      "prev": "12월",
+      "nextKinds": 15
+    },
+    {
+      "prev": "12일",
+      "nextKinds": 15
+    },
+    {
+      "prev": "13일",
+      "nextKinds": 15
+    },
+    {
+      "prev": "14일",
+      "nextKinds": 15
+    },
+    {
+      "prev": "15",
+      "nextKinds": 15
+    },
+    {
+      "prev": "15분",
+      "nextKinds": 15
+    },
+    {
+      "prev": "15일",
+      "nextKinds": 15
+    }
+  ]
+}

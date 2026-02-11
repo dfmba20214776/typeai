@@ -1,0 +1,4 @@
+﻿[
+  { "committedBeforeCursor": "", "preedit": "ㅎ", "expectPrefix": "ㅎ" },
+  { "committedBeforeCursor": "가", "preedit": "나", "expectPrefix": "가나" }
+]

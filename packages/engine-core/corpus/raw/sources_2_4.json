@@ -1,0 +1,17 @@
+{
+  "generated_at_utc": "2026-02-10T06:14:21.519073+00:00",
+  "items": [
+    {
+      "source_name": "AIHub-derived (Hugging Face mirror)",
+      "dataset_id": "shihyunlim/aihub-ko-en-everyday-expression",
+      "output_file": "C:\\Pubtest\\typing-assistant-lab\\packages\\engine-core\\corpus\\raw\\aihub_ko.txt",
+      "lines_written": 120000
+    },
+    {
+      "source_name": "OPUS OpenSubtitles v2024",
+      "url": "https://object.pouta.csc.fi/OPUS-OpenSubtitles/v2024/mono/ko.txt.gz",
+      "output_file": "C:\\Pubtest\\typing-assistant-lab\\packages\\engine-core\\corpus\\raw\\opus_open_subtitles_ko.txt",
+      "lines_written": 120000
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+node_modules/
+.pnpm-store/
+.next/
+dist/
+coverage/
+*.log
+dev.log
+dev.err.log
+.env
+.env.*
+!.env.example
+!.env.sample
+tmp_pageerror.js
+tmp_pageerror.mjs
+apps/testui-web/tmp_pageerror.js
+apps/testui-web/tmp_pageerror.mjs
+apps/testui-web/test-results/

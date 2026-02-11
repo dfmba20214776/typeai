@@ -1,0 +1,115 @@
+:root {
+  --bg: #f5f1e9;
+  --ink: #1e1a16;
+  --accent: #b3562b;
+  --panel: #fff7eb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, #fef9f1 0%, #f2e7d6 100%);
+}
+
+.app {
+  display: grid;
+  grid-template-columns: 1fr 280px 320px;
+  gap: 16px;
+  padding: 24px;
+}
+
+.editor-column {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 12px;
+}
+
+.editor-wrap {
+  position: relative;
+  min-height: 240px;
+  background: var(--panel);
+  border: 2px solid #d9c7b2;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.editor {
+  outline: none;
+  min-height: 160px;
+  font-size: 20px;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.4;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  text-rendering: geometricPrecision;
+}
+
+.ghost {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  right: 16px;
+  color: #bba58a;
+  pointer-events: none;
+  font-size: 20px;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.4;
+  letter-spacing: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  text-rendering: geometricPrecision;
+}
+
+.ghost-prefix {
+  color: transparent;
+}
+
+.panel {
+  background: var(--panel);
+  border: 2px solid #d9c7b2;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.suggestion-active {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.sentence-panel {
+  min-height: 180px;
+}
+
+.sentence-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.regen-btn {
+  border: 1px solid #c9b49c;
+  background: #fffdf8;
+  color: var(--ink);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.regen-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.sentence-error {
+  color: #9c2f1f;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
