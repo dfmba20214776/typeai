@@ -5,7 +5,7 @@ import { useEngineStore } from "../state";
 export default function SuggestionsPanel() {
   const { suggestions, selectedSuggestionIndex, selectSuggestion } = useEngineStore();
   return (
-    <div className="panel">
+    <div className="panel word-panel">
       <h3>Word Suggestions</h3>
       <ol>
         {suggestions.map((s, i) => (

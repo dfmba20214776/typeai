@@ -44,6 +44,38 @@ function placeCaretAtTextOffset(root: HTMLElement, offset: number): void {
   root.focus();
 }
 
+function ensureCaretVisible(root: HTMLElement): void {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return;
+  const range = selection.getRangeAt(0);
+  if (!root.contains(range.endContainer)) return;
+
+  const caretRange = range.cloneRange();
+  caretRange.collapse(true);
+  let caretRect = caretRange.getBoundingClientRect();
+
+  // If collapsed range has no box, insert a temporary marker.
+  if (caretRect.width === 0 && caretRect.height === 0) {
+    const marker = document.createElement("span");
+    marker.textContent = "\u200b";
+    marker.style.position = "relative";
+    marker.style.display = "inline-block";
+    caretRange.insertNode(marker);
+    caretRect = marker.getBoundingClientRect();
+    marker.parentNode?.removeChild(marker);
+  }
+
+  const rootRect = root.getBoundingClientRect();
+  const topPadding = 24;
+  const bottomPadding = 24;
+
+  if (caretRect.top < rootRect.top + topPadding) {
+    root.scrollTop -= rootRect.top + topPadding - caretRect.top;
+  } else if (caretRect.bottom > rootRect.bottom - bottomPadding) {
+    root.scrollTop += caretRect.bottom - (rootRect.bottom - bottomPadding);
+  }
+}
+
 function splitCommittedAndPreedit(textBeforeCaret: string, preedit: string): string {
   if (!preedit) return textBeforeCaret;
   if (textBeforeCaret.endsWith(preedit)) {
@@ -71,8 +103,6 @@ export default function EditorSurface() {
   const composingRef = useRef(false);
   const preeditRef = useRef("");
   const spaceAcceptArmedRef = useRef(false);
-  const keepFirstOnNextDownRef = useRef(false);
-  const lastSentenceTriggerRef = useRef("");
   const {
     setCommitted,
     setPreedit,
@@ -80,7 +110,6 @@ export default function EditorSurface() {
     applySelectedSuggestion,
     cycleSuggestion,
     bootstrap,
-    requestSentenceSuggestions,
     cycleSentenceSuggestion,
     applySelectedSentence,
     selectSentenceSuggestion
@@ -91,26 +120,25 @@ export default function EditorSurface() {
     if (!el) return;
 
     const syncCommittedThenSuggest = () => {
-      keepFirstOnNextDownRef.current = true;
       spaceAcceptArmedRef.current = false;
       const text = el.textContent ?? "";
       const caret = getCaretTextOffset(el);
       setCommitted(text.slice(0, Math.max(0, Math.min(caret, text.length))));
       setPreedit(preeditRef.current);
       queueMicrotask(() => requestSuggest());
+      requestAnimationFrame(() => ensureCaretVisible(el));
     };
 
     const syncFromCaretMove = () => {
-      keepFirstOnNextDownRef.current = true;
       const text = el.textContent ?? "";
       const caret = getCaretTextOffset(el);
       setCommitted(text.slice(0, Math.max(0, Math.min(caret, text.length))));
       setPreedit(preeditRef.current);
       queueMicrotask(() => requestSuggest());
+      requestAnimationFrame(() => ensureCaretVisible(el));
     };
 
     const syncComposingThenSuggest = (data?: string | null) => {
-      keepFirstOnNextDownRef.current = true;
       spaceAcceptArmedRef.current = false;
       if (typeof data === "string") preeditRef.current = data;
       const text = el.textContent ?? "";
@@ -121,24 +149,7 @@ export default function EditorSurface() {
       setCommitted(splitCommittedAndPreedit(textBeforeCaret, preeditRef.current));
       setPreedit(preeditRef.current);
       queueMicrotask(() => requestSuggest());
-    };
-
-    const triggerSentenceSuggestions = () => {
-      const text = el.textContent ?? "";
-      const caret = getCaretTextOffset(el);
-      const before = text.slice(0, Math.max(0, Math.min(caret, text.length)));
-      void requestSentenceSuggestions(before);
-    };
-
-    const maybeTriggerSentenceSuggestions = () => {
-      const text = el.textContent ?? "";
-      const caret = getCaretTextOffset(el);
-      const before = text.slice(0, Math.max(0, Math.min(caret, text.length)));
-      const trimmed = before.trimEnd();
-      if (!/[.!?]$/.test(trimmed) && !/\n$/.test(before)) return;
-      if (lastSentenceTriggerRef.current === trimmed) return;
-      lastSentenceTriggerRef.current = trimmed;
-      void requestSentenceSuggestions(before);
+      requestAnimationFrame(() => ensureCaretVisible(el));
     };
 
     const onBeforeInput = (e: InputEvent) => {
@@ -155,7 +166,6 @@ export default function EditorSurface() {
         return;
       }
       syncCommittedThenSuggest();
-      queueMicrotask(() => maybeTriggerSentenceSuggestions());
     };
 
     const onCompositionStart = (e: CompositionEvent) => {
@@ -186,9 +196,14 @@ export default function EditorSurface() {
 
     const onKeyUp = (e: KeyboardEvent) => {
       if (composingRef.current) return;
-      // Keep suggestion cycling with ArrowUp/ArrowDown intact.
-      // Re-sync only for caret movement keys.
-      if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End") {
+      if (
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight" ||
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "Home" ||
+        e.key === "End"
+      ) {
         syncFromCaretMove();
       }
     };
@@ -210,7 +225,6 @@ export default function EditorSurface() {
           queueMicrotask(() => {
             placeCaretAtTextOffset(el, nextCaret);
             syncCommittedThenSuggest();
-            triggerSentenceSuggestions();
           });
         }
       };
@@ -219,27 +233,9 @@ export default function EditorSurface() {
         applyCurrentSentence();
         return;
       }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (keepFirstOnNextDownRef.current) {
-          keepFirstOnNextDownRef.current = false;
-          spaceAcceptArmedRef.current = true;
-          return;
-        }
-        cycleSuggestion(1);
-        spaceAcceptArmedRef.current = true;
-        return;
-      }
       if (e.key === "`") {
         e.preventDefault();
         cycleSuggestion(1);
-        spaceAcceptArmedRef.current = true;
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        keepFirstOnNextDownRef.current = false;
-        cycleSuggestion(-1);
         spaceAcceptArmedRef.current = true;
         return;
       }
@@ -287,7 +283,6 @@ export default function EditorSurface() {
         if (nextCaret !== null) {
           placeCaretAtTextOffset(el, nextCaret);
           syncCommittedThenSuggest();
-          triggerSentenceSuggestions();
         }
       });
     };
@@ -324,7 +319,6 @@ export default function EditorSurface() {
     applySelectedSuggestion,
     cycleSuggestion,
     bootstrap,
-    requestSentenceSuggestions,
     cycleSentenceSuggestion,
     applySelectedSentence,
     selectSentenceSuggestion

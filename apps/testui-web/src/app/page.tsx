@@ -2,12 +2,14 @@ import EditorSurface from "../components/EditorSurface";
 import GhostOverlay from "../components/GhostOverlay";
 import SuggestionsPanel from "../components/SuggestionsPanel";
 import SentenceSuggestionsPanel from "../components/SentenceSuggestionsPanel";
+import StorylineControl from "../components/StorylineControl";
 import DebugPanel from "../components/DebugPanel";
 
 export default function Home() {
   return (
     <main className="app">
       <div className="editor-column">
+        <StorylineControl />
         <div className="editor-wrap">
           <EditorSurface />
           <GhostOverlay />

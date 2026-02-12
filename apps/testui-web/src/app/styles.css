@@ -12,6 +12,7 @@ body {
   font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   color: var(--ink);
   background: linear-gradient(180deg, #fef9f1 0%, #f2e7d6 100%);
+  min-height: 100vh;
 }
 
 .app {
@@ -19,26 +20,123 @@ body {
   grid-template-columns: 1fr 280px 320px;
   gap: 16px;
   padding: 24px;
+  height: 100vh;
+  overflow: hidden;
+  align-items: stretch;
 }
 
 .editor-column {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   gap: 12px;
+  min-height: 0;
+}
+
+.storyline-wrap {
+  position: relative;
+  justify-self: start;
+  width: 100%;
+}
+
+.storyline-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.storyline-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.storyline-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px dashed #ccb79f;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #5f4b3d;
+  background: #fff9f1;
+}
+
+.storyline-guide code {
+  font-size: 12px;
+}
+
+.storyline-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 20;
+  width: min(520px, 72vw);
+  background: var(--panel);
+  border: 2px solid #d9c7b2;
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 8px 24px rgba(30, 26, 22, 0.18);
+}
+
+.storyline-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.storyline-popover label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.storyline-popover textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 96px;
+  border: 1px solid #ccb79f;
+  border-radius: 8px;
+  padding: 8px;
+  font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+  background: #fffdf8;
+}
+
+.preview-popover textarea {
+  font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+.storyline-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .editor-wrap {
   position: relative;
-  min-height: 240px;
+  min-height: 0;
   background: var(--panel);
   border: 2px solid #d9c7b2;
   padding: 16px;
   border-radius: 12px;
+  height: clamp(260px, 52vh, 640px);
+  overflow: hidden;
 }
 
 .editor {
   outline: none;
-  min-height: 160px;
+  min-height: 0;
+  height: 100%;
+  overflow-y: auto;
+  padding-right: 4px;
   font-size: 20px;
   font-family: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
   line-height: 1.4;
@@ -75,6 +173,7 @@ body {
   border: 2px solid #d9c7b2;
   border-radius: 12px;
   padding: 12px;
+  min-height: 0;
 }
 
 .suggestion-active {
@@ -83,7 +182,10 @@ body {
 }
 
 .sentence-panel {
-  min-height: 180px;
+  min-height: 0;
+  height: clamp(180px, 28vh, 360px);
+  display: flex;
+  flex-direction: column;
 }
 
 .sentence-header {
@@ -91,6 +193,12 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.sentence-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .regen-btn {
@@ -108,8 +216,60 @@ body {
   cursor: not-allowed;
 }
 
+.regen-btn-active {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+
 .sentence-error {
   color: #9c2f1f;
   font-size: 13px;
   margin-bottom: 8px;
+}
+
+.sentence-panel ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  overflow-y: auto;
+}
+
+.word-panel,
+.debug-panel {
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.word-panel ol {
+  margin: 8px 0 0;
+  padding-left: 20px;
+  overflow-y: auto;
+}
+
+@media (max-width: 1100px) {
+  .app {
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
+  }
+
+  .word-panel,
+  .debug-panel,
+  .editor-wrap,
+  .sentence-panel {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .editor {
+    min-height: 180px;
+    height: auto;
+    overflow: visible;
+  }
+
+  .storyline-top {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

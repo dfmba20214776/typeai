@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useEngineStore } from "../state";
 
 export default function SentenceSuggestionsPanel() {
   const {
     sentenceSuggestions,
+    aiSuggestionType,
     selectedSentenceIndex,
     selectSentenceSuggestion,
     sentenceLoading,
@@ -16,18 +17,31 @@ export default function SentenceSuggestionsPanel() {
   return (
     <div className="panel sentence-panel">
       <div className="sentence-header">
-        <h3>Sentence Suggestions (5)</h3>
-        <button
-          type="button"
-          className="regen-btn"
-          disabled={sentenceLoading}
-          onClick={() => {
-            const hint = `regen-${Date.now()}`;
-            void requestSentenceSuggestions(committedBeforeCursor, hint);
-          }}
-        >
-          다시 추천
-        </button>
+        <h3>AI Suggestions (5)</h3>
+        <div className="sentence-actions">
+          <button
+            type="button"
+            className={`regen-btn ${aiSuggestionType === "sentence" ? "regen-btn-active" : ""}`}
+            disabled={sentenceLoading}
+            onClick={() => {
+              const hint = `regen-sentence-${Date.now()}`;
+              void requestSentenceSuggestions(committedBeforeCursor, "sentence", hint);
+            }}
+          >
+            문장 추천
+          </button>
+          <button
+            type="button"
+            className={`regen-btn ${aiSuggestionType === "paragraph" ? "regen-btn-active" : ""}`}
+            disabled={sentenceLoading}
+            onClick={() => {
+              const hint = `regen-paragraph-${Date.now()}`;
+              void requestSentenceSuggestions(committedBeforeCursor, "paragraph", hint);
+            }}
+          >
+            문단 추천
+          </button>
+        </div>
       </div>
       {sentenceLoading ? <div>loading...</div> : null}
       {sentenceError ? <div className="sentence-error">{sentenceError}</div> : null}

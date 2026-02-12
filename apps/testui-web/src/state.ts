@@ -10,6 +10,8 @@ export type SentenceSuggestion = {
   source: "llm";
 };
 
+export type AISuggestionType = "sentence" | "paragraph";
+
 const engine = new Engine();
 
 const FALLBACK_DICT = ["hello", "help", "helium", "오늘", "오늘은", "가나다"];
@@ -65,9 +67,12 @@ type Store = {
   suggestions: SuggestionItem[];
   selectedSuggestionIndex: number;
   sentenceSuggestions: SentenceSuggestion[];
+  aiSuggestionType: AISuggestionType;
   selectedSentenceIndex: number;
   sentenceLoading: boolean;
   sentenceError: string | null;
+  storylinePrompt: string;
+  storylineOpen: boolean;
   ghostLeadText: string;
   ghostText: string;
   corpusSource: "fallback" | "public";
@@ -79,11 +84,13 @@ type Store = {
   lastSuggestion: SuggestionItem | null;
   setCommitted: (t: string) => void;
   setPreedit: (t: string) => void;
+  setStorylinePrompt: (t: string) => void;
+  setStorylineOpen: (open: boolean) => void;
   cycleSuggestion: (dir: 1 | -1) => void;
   selectSuggestion: (index: number) => void;
   cycleSentenceSuggestion: (dir: 1 | -1) => void;
   selectSentenceSuggestion: (index: number) => void;
-  requestSentenceSuggestions: (contextBeforeCursor: string, variationHint?: string) => Promise<void>;
+  requestSentenceSuggestions: (contextBeforeCursor: string, suggestionType?: AISuggestionType, variationHint?: string) => Promise<void>;
   bootstrap: () => void;
   requestSuggest: () => void;
   applySelectedSuggestion: (el: HTMLDivElement, caretOffset: number) => number | null;
@@ -114,15 +121,67 @@ function shouldAutoAppendPeriod(appliedText: string, afterCursor: string): boole
   return /(다|요|죠|네|까|니다|습니다)$/.test(trimmed);
 }
 
+function normalizeOverlapToken(token: string): string {
+  return token
+    .toLowerCase()
+    .replace(/^[\s"'`“”‘’.,!?()[\]{}<>-]+/g, "")
+    .replace(/[\s"'`“”‘’.,!?()[\]{}<>-]+$/g, "");
+}
+
+function dedupeOverlapPrefix(beforeCursor: string, paragraph: string): { text: string; overlap: number } {
+  const beforeTrimmed = beforeCursor.trim();
+  const paragraphTrimmed = paragraph.trim();
+  const beforeTokens = beforeTrimmed.split(/\s+/).filter((x) => x.length > 0);
+  const paraTokens = paragraphTrimmed.split(/\s+/).filter((x) => x.length > 0);
+  if (beforeTokens.length === 0 || paraTokens.length === 0) return { text: paragraphTrimmed, overlap: 0 };
+
+  const maxOverlap = Math.min(12, beforeTokens.length, paraTokens.length);
+  for (let k = maxOverlap; k >= 1; k--) {
+    let same = true;
+    for (let i = 0; i < k; i++) {
+      const a = normalizeOverlapToken(beforeTokens[beforeTokens.length - k + i]);
+      const b = normalizeOverlapToken(paraTokens[i]);
+      if (a !== b) {
+        same = false;
+        break;
+      }
+    }
+    if (same) {
+      const remaining = paraTokens.slice(k).join(" ").trim();
+      return { text: remaining, overlap: k };
+    }
+  }
+
+  // Fallback: char-level overlap for punctuation/spacing variants.
+  // Example: "...좋은 마음에" + "좋은 마음에 그녀는 ..."
+  const beforeNorm = beforeTrimmed.toLowerCase().replace(/\s+/g, " ");
+  const paraNorm = paragraphTrimmed.toLowerCase().replace(/\s+/g, " ");
+  const maxCharOverlap = Math.min(60, beforeNorm.length, paraNorm.length);
+  for (let n = maxCharOverlap; n >= 3; n--) {
+    const suffix = beforeNorm.slice(-n);
+    if (paraNorm.startsWith(suffix)) {
+      const drop = paragraphTrimmed.slice(0, n).trim();
+      if (drop.length > 0) {
+        return { text: paragraphTrimmed.slice(n).trim(), overlap: 1 };
+      }
+    }
+  }
+
+  return { text: paragraphTrimmed, overlap: 0 };
+}
+
 export const useEngineStore = create<Store>((set, get) => ({
   committedBeforeCursor: "",
   preedit: "",
   suggestions: [],
   selectedSuggestionIndex: 0,
   sentenceSuggestions: [],
+  aiSuggestionType: "paragraph",
   selectedSentenceIndex: 0,
   sentenceLoading: false,
   sentenceError: null,
+  storylinePrompt: "",
+  storylineOpen: false,
   ghostLeadText: "",
   ghostText: "",
   corpusSource: "fallback",
@@ -134,6 +193,22 @@ export const useEngineStore = create<Store>((set, get) => ({
   lastSuggestion: null,
   setCommitted: (t) => set({ committedBeforeCursor: t }),
   setPreedit: (t) => set({ preedit: t }),
+  setStorylinePrompt: (t) => {
+    const next = t.trim();
+    set({ storylinePrompt: next });
+    if (typeof window !== "undefined") {
+      try {
+        if (next) {
+          window.localStorage.setItem("typing-assistant.storylinePrompt", next);
+        } else {
+          window.localStorage.removeItem("typing-assistant.storylinePrompt");
+        }
+      } catch {
+        // Ignore localStorage failures.
+      }
+    }
+  },
+  setStorylineOpen: (open) => set({ storylineOpen: open }),
   cycleSuggestion: (dir) => {
     const s = get();
     if (s.suggestions.length <= 1) return;
@@ -170,10 +245,17 @@ export const useEngineStore = create<Store>((set, get) => ({
     const nextIndex = Math.max(0, Math.min(index, s.sentenceSuggestions.length - 1));
     set({ selectedSentenceIndex: nextIndex });
   },
-  requestSentenceSuggestions: async (contextBeforeCursor, variationHint) => {
+  requestSentenceSuggestions: async (contextBeforeCursor, suggestionType = "paragraph", variationHint) => {
     const trimmedContext = contextBeforeCursor.trim();
-    if (!trimmedContext) {
-      set({ sentenceSuggestions: [], selectedSentenceIndex: 0, sentenceLoading: false, sentenceError: null });
+    const storylinePrompt = get().storylinePrompt.trim();
+    const effectiveContext = trimmedContext || storylinePrompt;
+    if (!effectiveContext) {
+      set({
+        sentenceSuggestions: [],
+        selectedSentenceIndex: 0,
+        sentenceLoading: false,
+        sentenceError: "커서 앞 문맥 또는 스토리라인을 먼저 입력해 주세요."
+      });
       return;
     }
     set({ sentenceLoading: true, sentenceError: null });
@@ -181,13 +263,20 @@ export const useEngineStore = create<Store>((set, get) => ({
       const res = await fetch("/api/sentence-suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contextBeforeCursor: trimmedContext, maxCandidates: 5, variationHint })
+        body: JSON.stringify({
+          contextBeforeCursor: effectiveContext,
+          maxCandidates: 5,
+          variationHint,
+          suggestionType,
+          storylinePrompt
+        })
       });
       const data = (await res.json()) as { items?: SentenceSuggestion[]; error?: string };
       if (!res.ok) throw new Error(data.error ?? `sentence suggest failed: ${res.status}`);
       const items = Array.isArray(data.items) ? data.items : [];
       set({
         sentenceSuggestions: items.slice(0, 5),
+        aiSuggestionType: suggestionType,
         selectedSentenceIndex: 0,
         sentenceLoading: false,
         sentenceError: null
@@ -198,6 +287,16 @@ export const useEngineStore = create<Store>((set, get) => ({
     }
   },
   bootstrap: () => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedStorylinePrompt = window.localStorage.getItem("typing-assistant.storylinePrompt") ?? "";
+        if (savedStorylinePrompt.trim().length > 0) {
+          set({ storylinePrompt: savedStorylinePrompt.trim() });
+        }
+      } catch {
+        // Ignore localStorage failures.
+      }
+    }
     void loadCorpusIfAvailable().then(() => {
       get().requestSuggest();
     });
@@ -253,9 +352,11 @@ export const useEngineStore = create<Store>((set, get) => ({
     const safeCaret = Math.max(0, Math.min(caretOffset, fullText.length));
     const beforeCursor = fullText.slice(0, safeCaret);
     const afterCursor = fullText.slice(safeCaret);
-    const needsPrefixSpace = beforeCursor.length > 0 && !/\s$/.test(beforeCursor);
-    const sentence = item.text.trim();
-    const inserted = `${needsPrefixSpace ? " " : ""}${sentence}`;
+    const rawParagraph = item.text.trim();
+    const deduped = dedupeOverlapPrefix(beforeCursor, rawParagraph);
+    const paragraph = deduped.text.length > 0 ? deduped.text : rawParagraph;
+    const needsInlineSpace = beforeCursor.length > 0 && !/\s$/.test(beforeCursor);
+    const inserted = `${needsInlineSpace ? " " : ""}${paragraph}`;
     const nextBefore = beforeCursor + inserted;
     const next = nextBefore + afterCursor;
     el.textContent = next;

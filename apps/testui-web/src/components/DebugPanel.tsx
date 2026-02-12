@@ -21,7 +21,7 @@ export default function DebugPanel() {
     sentenceError
   } = useEngineStore();
   return (
-    <div className="panel" data-testid="debug-panel">
+    <div className="panel debug-panel" data-testid="debug-panel">
       <h3>Debug</h3>
       <div>corpus: {corpusSource}</div>
       <div>dict size: {corpusDictSize}</div>
